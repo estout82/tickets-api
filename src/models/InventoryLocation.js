@@ -16,7 +16,7 @@ const inventoryLocationSchema = Schema({
     format: {
         type: {
             grid: [Number, Number],
-            shelves: [Schema.Types.ObjectId]
+            shelves: [String]
         },
         default: null
     },

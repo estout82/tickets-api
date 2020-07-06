@@ -30,7 +30,15 @@ const ticketSchema = mongoose.Schema({
         }
     },
     organization: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
+        validate: {
+            validator: async (value) => {
+                let result = await validate.validateId(Organization, value);
+                return result;
+            },
+            message: props => `${props.value} is not a organization id`
+        },
         default: null
     },
     user: {
@@ -51,17 +59,9 @@ const ticketSchema = mongoose.Schema({
     },
     comments: {
         type: {
-            creator: {
-                type: Schema.Types.ObjectId,
-                ref: 'User',
-                required: true,
-                validate: {
-                    validator: async (value) => {
-                        let result = await validate.validateId(User, value);
-                        return result;
-                    },
-                    message: props => `${props.value} is not a user id`
-                }
+            creatorName: {
+                type: String,
+                required: true
             },
             timeCreated: {
                 type: Date,

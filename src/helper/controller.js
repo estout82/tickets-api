@@ -1,146 +1,132 @@
 
-// TODO: maybe pass in a callback for actually querying data?
-
 const express = require('express');
 const debug = require('../helper/debug');
 
-// OPTIONS
-// shortReadFields          -> fields to select when executing bulk read
-// longReadPopulateFields   -> fields to populate on long read
+const handleGeneralError = (err, req, res, next) => {
+    next(err);
+}
 
-class Controller {
-    constructor(model, options) {
-        // setup members
-        this._router = express.Router();
-        
-        // pull all options out of options object
-        if (options) {
-            this._shortReadFields = options.shortReadFields;
-            this._longReadPopulateFields = options.longReadPopulateFields
-            this._preCreateCallback = options.preCreateCallback;
-            this._postCreateCallback = options.postCreateCallback;
-        }
+const handleValidateError = (err, req, res, next) => {
+    const data = {};
+    const errors = err.errors;
 
-        // ensure model is not null
-        if (model == null) {
-            throw new Error('model cannot be null!');
-        }
+    // extract nessecary data from each error
+    Object.keys(errors).forEach((key) => {
+        const errorValue = errors[key]; 
 
-        this._model = model;
+        data[errorValue.path] = {
+            message: errorValue.properties.message // extract message
+        };
+    });
 
-        // setup routes
-        this._router.get('/', (req, res) => {
-            this._handleReadAll(req, res)
-        });
-        
-        this._router.get('/:id([0-9a-zA-Z]{24})', this._handleRead);
+    // forward to error middleware
+    next({
+        status: 'request err',
+        msg: 'invalid data',
+        data: data
+    });
+}
 
-        this._router.post('/create', (req, res) => {
-            this._handleCreate(req, res, this._preCreateCallback, 
-                this._postCreateCallback);
-        });
+const handleQueryError = (err, req, res, next) => {
+    res.status(500);
+    next({
+        status: 'query err',
+        msg: err.message,
+        debug: debug.replace(err)
+    });
+}
 
-        this._router.patch('/:id([0-9a-zA-Z]{24})', this._handleUpdate);
-        this._router.delete('/:id([0-9a-zA-Z]{24})', this._handleDelete);
-    }
+const handleSaveError = (err, req, res, next) => {
+    res.status(500);
+    next({
+        status: 'save err',
+        msg: err.message,
+        debug: debug.replace(err)
+    });
+}
 
-    // binds the router to another router / app
-    bind = (target, path) => {
-        target.use(path, this._router);
-    }
+const handleEmptyRequest = (req, res, next) => {
+    res.status(400);
+    next({
+        status: 'err',
+        msg: 'empty request body'
+    });
+}
 
-    // attaches a custom get handler
-    attachGetHandler = (path, handler) => {
-        this._router.get(path, handler);
-    }
+const handleNotImplemented = (req, res) => {
+    res.status(400).json({
+        status: 'err',
+        msg: 'not implemented'
+    });
+}
 
-    // attaches a custom post handler
-    attachPostHandler = (path, handler) => {
-        this._router.post(path, handler);
-    }
-
-    overrideReadAll(callback) {
-        this._handleReadAll = callback;
-    }
-
-    overrideRead(callback) {
-        this._handleRead = callback;
-    }
-
-    overrideCreate(callback) {
-        this._handleCreate = callback;
-    }
-
-    overrideUpdate(callback) {
-        this._handleUpdate = callback;
-    }
-
-    overrideDelete(callback) {
-        this._handleDelete = callback;
-    }
-
-    // read all docs from collection
-    _handleReadAll = async (req, res) => {
-        let data = {};
-
-        // only return some fields if shortRead field is set
-        if (this._shortReadFields) {
-            try {
-                data = await this._model.find()
-                    .select(this.shortReadFields)
-                    .exec();
-
-                return res.status(200).json({
-                    status: 'ok',
-                    data: data
-                });
-            } catch (err) {
-                return this._handleQueryError(req, res, err);
-            }
-        }
-    }
-
-    // read a single doc
-    _handleRead = async (req, res) => {
-        const id = req.params.id; // this is already a valid oid b/c regex in router
-
+const createReadAllHandler = (model, queryCallback = null) => {
+    return async (req, res, next) => {
         try {
-            let query = this._model.findById(id);
-            
-            // populate fields
-            if (this._longReadPopulateFields) {
-                query.populate(this._longReadPopulateFields);
-            }
+            let queryResult = null;
 
-            let data = await query.exec();
+            if (queryCallback) {
+                // call queryCallback if exists
+                queryResult = await queryCallback();
+            } else {
+                // call generic query function
+                queryResult = await model.find();
+            }
 
             return res.status(200).json({
                 status: 'ok',
-                data: data
+                data: queryResult
             });
         } catch (err) {
-            return this._handleQueryError(req, res, err);
+            return handleQueryError(err, req, res, next);
         }
     }
+}
 
-    // create a new doc
-    _handleCreate = async (req, res, pre, post) => {
-        if (pre && !pre(req, res)) {
-            return;
+const isBodyEmpty = (req) => {
+   return !req.body;
+}
+
+const createReadHandler = (model, queryCallback = null) => {
+    return async (req, res, next) => {
+        const id = req.params.id; // this is already a valid oid b/c regex in router
+
+        try {
+            let queryResult = null;
+
+            // call custom query method if given
+            if (queryCallback) {
+                queryResult = await queryCallback(id);
+            } else {
+                queryResult = await model.findById(id);
+            }
+
+            return res.status(200).json({
+                status: 'ok',
+                data: queryResult
+            });
+        } catch (err) {
+            return handleQueryError(err, req, res, next);
         }
+    };
+};
+
+const createCreateHandler = (model) => {
+    return async (req, res, next) => {
+        console.log('hi');
 
         // ensure body is not empty
         if (!req.body) {
-            return this._handleEmptyRequest(req, res);
+            return handleEmptyRequest(req, res, next);
         }
 
-        let doc = new this._model(req.body);
+        let doc = new model(req.body);
 
         // validate doc
         try {
             let validateError = await doc.validate();
         } catch (err) {
-            return this._handleValidateError(req, res, err);
+            return handleValidateError(err, req, res, next);
         }
 
         // preform query
@@ -153,23 +139,26 @@ class Controller {
                 data: [ saveResult._id ]
             });
         } catch (err) {
-            return this._handleSaveError(req, res, err);
+            return handleSaveError(req, res, err);
         }
-    }
+    };
+};
 
-    // update existing doc
-    _handleUpdate = async (req, res) => {
+// factory method for creating a generic update handler for a controller
+const createUpdateHandler = (model) => {
+    // return function w/ local binding for model
+    return async (req, res, next) => {
         const id = req.params.id;
         let doc = null;
 
         // ensure request body is not null
         if (!req.body) {
-            return this._handleEmptyRequest(req, res);
+            return handleEmptyRequest(req, res);
         }
 
         // get doc from db
         try {
-            doc = await this._model.findById(id);
+            doc = await model.findById(id);
 
             if (!doc) {
                 return res.status(401).json({
@@ -178,7 +167,7 @@ class Controller {
                 });
             }
         } catch (err) {
-            return this._handleQueryError(req, res, err);
+            return handleQueryError(req, res, err);
         }
 
         // update doc fields
@@ -191,7 +180,7 @@ class Controller {
         try {
             let validateResult = await doc.validate();
         } catch (err) {
-            return this._handleValidateError(req, res, err);
+            return handleValidateError(req, res, err);
         }
 
         // save updated doc
@@ -204,58 +193,21 @@ class Controller {
                 data: [queryResult._id]
             });
         } catch (err) {
-            return this._handleQueryError(req, res, err);
+            return handleQueryError(req, res, err);
         }
-    }
-
-    // delete existing doc
-    _handleDelete = async (req, res) => {
-         
-    }
-    
-    // handle an error after a validate
-    _handleValidateError = (req, res, err) => {
-        const data = {};
-        const errors = err.errors;
-
-        // extract nessecary data from each error
-        Object.keys(errors).forEach((key) => {
-            const errorValue = errors[key]; 
-
-            data[errorValue.path] = {
-                message: errorValue.properties.message // extract message
-            };
-        });
-
-        res.status(400).json({
-            status: 'request error',
-            message: 'invalid data',
-            data: data
-        });
-    }
-
-    _handleQueryError = (req, res, err) => {
-        res.status(500).json({
-            status: 'query err',
-            msg: err.message,
-            debug: debug.replace(err)
-        });
-    }
-
-    _handleSaveError = (req, res, err) => {
-        res.status(500).json({
-            status: 'save err',
-            msg: err.message,
-            debug: debug.replace(err)
-        });
-    }
-
-    _handleEmptyRequest = (req, res) => {
-        res.status(400).json({
-            status: 'request err',
-            msg: 'empty body'
-        });
     }
 }
 
-module.exports = Controller;
+module.exports = {
+    createReadAllHandler,
+    createUpdateHandler,
+    createReadHandler,
+    createCreateHandler,
+    handleValidateError,
+    handleQueryError,
+    handleSaveError,
+    handleEmptyRequest,
+    handleNotImplemented,
+    handleGeneralError,
+    isBodyEmpty
+};

@@ -9,7 +9,8 @@ const organizationSchema = Schema({
     },
     code: {
         type: String,
-        default: null
+        default: null,
+        unique: true
     },
     addresses: {
         type: [String],

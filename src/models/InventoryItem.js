@@ -1,5 +1,7 @@
 
 const mongoose = require('mongoose');
+const { validateId } = require('../helper/validate');
+const InventoryLocation = require('../models/InventoryLocation');
 
 const Schema = mongoose.Schema;
 
@@ -33,6 +35,13 @@ const schema = Schema({
     },
     location: {
         type: Schema.Types.ObjectId,
+        ref: 'Inventory Location',
+        validate: {
+            validator: async (value) => {
+                return await validateId(InventoryLocation, value);
+            },
+            message: props => `${props.value} is not a valid inventory location id`
+        },
         default: null
     },
     customId: {

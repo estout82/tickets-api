@@ -61,6 +61,8 @@ router.get('/', async (req, res) => {
         // validate password
         const passwordValid = await bcrypt.compare(loginPassword, user.password);
 
+        console.log(loginPassword);
+
         if (!passwordValid) {
             res.status(403).json({
                 msg: 'invalid password'

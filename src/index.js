@@ -18,6 +18,7 @@ const userController = require('./controllers/user');
 const loginController = require('./controllers/login');
 const inventoryLocationController = require('./controllers/inventoryLocation');
 const inventoryItemController = require('./controllers/inventoryItem');
+const inventoryAssignmentController = require('./controllers/inventoryAssignment');
 
 const app = express();
 
@@ -35,18 +36,17 @@ mongoose.connect(process.env.DB_CONNECTION_URL, {
 
 // middleware
 app.use(morgan('common'));
-app.use(helmet())
+app.use(helmet());
 app.use(express.json());
 app.use('/api', auth); // require auth for whole api
 
 // routes
-ticketController.bind(app, '/api/ticket');
-ticketCategoryController.bind(app, '/api/ticketCategory');
-userController.bind(app, '/api/user');
-inventoryLocationController.bind(app, '/api/inventoryLocation');
-inventoryItemController.bind(app, '/api/item');
-
-// speical routes .. FIXME: fix these
+app.use('/api/inventoryAssignment', inventoryAssignmentController);
+app.use('/api/ticket', ticketController);
+app.use('/api/ticketCategory', ticketCategoryController);
+app.use('/api/user', userController);
+app.use('/api/inventoryLocation', inventoryLocationController);
+app.use('/api/item', inventoryItemController);
 app.use('/login',loginController);
 
 // not found middleware
@@ -60,10 +60,22 @@ app.use((req, res) => {
 
 // error middleware 
 app.use((err, req, res, next) => {
+    // set error response params
+    const status = err.status ? err.status : 'err';
+    const msg = err.msg ? err.msg : 'unknown server error';
+    const data = err.data ? err.data : null;
+    const debugMsg = err.debug ? err.debug : err;
+
+    // set status code if not set already
+    if (res.statusCode == 200) {
+        res.status(500);
+    }
+
     res.status(500).json({
-        status: 'err',
-        msg: 'unknown server error',
-        debug: debug.replace(err)
+        status: status,
+        msg: msg,
+        data: data,
+        debug: debug.replace(debugMsg)
     });
 });
 

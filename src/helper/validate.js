@@ -1,7 +1,7 @@
 
 const validateIdString = (id) => {
     return /[0-9a-zA-Z]{24}/.test(id);
-} 
+}
 
 const validateId = async (model, id) => {
     // ensure id strin gis valid

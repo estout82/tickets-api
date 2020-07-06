@@ -1,78 +1,46 @@
 
-const Controller = require('../helper/controller');
-const Ticket = require('../models/Ticket')
+const express = require('express');
+const controller = require('../helper/controller');
+const Ticket = require('../models/Ticket');
 
-const controller = new Controller(Ticket);
+const router = express.Router();
 
-const readAll = async (req, res) => {
-    try {
-        let queryResult = await Ticket.find()
-        .select('_id title organization user category')
-        .populate([
-            { path: 'user', select: 'firstName lastName' }
-        ])
-        .exec();
-
-        if (!queryResult) {
-            res.status(404).json({
-                msg: "2000: no data"
-            });
-
-            return;
-        }
-
-        res.status(200).json({
-            msg: 'ok',
-            data: queryResult
-        });
-        
-        return;
-    } catch (err) {
-        res.status(500).json({
-            msg: '2001: error during query',
-            debug: err.message
-        });
-
-        return;
-    }
+const readAllQueryCallback = async () => {
+    return Ticket
+    .find()
+    .select('title category organization user')
+    .populate([
+        { path: 'user', select: 'firstName lastName email' },
+        { path: 'organization', select: 'name' },
+        { path: 'category', select: 'name' }
+    ])
+    .exec();
 };
 
-const read = async (req, res) => {
-    const ticketId = req.params.id;
-
-    try {
-        let queryResult = await Ticket.findById(ticketId)
-        .populate([
-            { path: 'user', select: 'firstName lastName email' },
-            { path: 'organization', select: 'name' },
-            { path: 'category', select: 'name' }
-        ])
-        .exec();
-
-        if (!queryResult) {
-            res.status(404).json({
-                msg: '2000: no data'
-            });
-
-            return;
-        }
-
-        // data is good, send response
-        res.status(200).json({
-            msg: 'ok',
-            data: queryResult
-        });
-
-    } catch (err) {
-        res.status(500).json({
-            msg: '2001: error during query'
-        });
-
-        return;
-    }
+const readQueryCallback = async (id) => {
+    return Ticket
+    .findById(id)
+    .populate([
+        { path: 'user'},
+        { path: 'organization' },
+        { path: 'category' }
+    ])
+    .exec();
 };
 
-controller.overrideRead(read);
-controller.overrideReadAll(readAll);
+router.get('/', 
+    controller.createReadAllHandler(Ticket, readAllQueryCallback));
 
-module.exports = controller;
+router.get('/:id([0-9a-zA-Z])', 
+    controller.createReadHandler(Ticket, readQueryCallback));
+
+router.post('/create', 
+    controller.createCreateHandler(Ticket));
+
+router.patch('/:id([0-9a-zA-Z]{24})', 
+    controller.createUpdateHandler(Ticket));
+
+router.delete('/([0-9a-zA-Z]{24})', 
+    controller.handleNotImplemented);
+
+module.exports = router;
