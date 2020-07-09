@@ -4,12 +4,15 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const debug = require('./helper/debug');
+const session = require('express-session');
+const passport = require('passport');
 
 // import environment variables
 require('dotenv').config();
 
 // import middleware
-const auth = require('./auth/auth');
+const { auth } = require('./auth/auth');
+const testAuth = require('./auth/aadAuth.js');
 
 // import controllers
 const ticketController = require('./controllers/ticket');
@@ -35,19 +38,21 @@ mongoose.connect(process.env.DB_CONNECTION_URL, {
 });
 
 // middleware
-app.use(morgan('common'));
+app.use('/api', morgan('common'));
 app.use(helmet());
 app.use(express.json());
 app.use('/api', auth); // require auth for whole api
+app.use(passport.initialize());
 
 // routes
-app.use('/api/inventoryAssignment', inventoryAssignmentController);
 app.use('/api/ticket', ticketController);
-app.use('/api/ticketCategory', ticketCategoryController);
+app.use('/api/ticket/category', ticketCategoryController);
 app.use('/api/user', userController);
-app.use('/api/inventoryLocation', inventoryLocationController);
-app.use('/api/item', inventoryItemController);
+app.use('/api/inventory/item', inventoryItemController);
+app.use('/api/inventory/assignment', inventoryAssignmentController);
+app.use('/api/inventory/location', inventoryLocationController);
 app.use('/login',loginController);
+app.use('/', testAuth);
 
 // not found middleware
 app.use((req, res) => {
@@ -65,6 +70,8 @@ app.use((err, req, res, next) => {
     const msg = err.msg ? err.msg : 'unknown server error';
     const data = err.data ? err.data : null;
     const debugMsg = err.debug ? err.debug : err;
+
+    console.log(err);
 
     // set status code if not set already
     if (res.statusCode == 200) {

@@ -1,12 +1,19 @@
 
+/**
+ * name:        eric stoutenburg
+ * email:       eric.stoutenburg@baysideonline.com
+ * date:        07 06 2020
+ * file:        ticket.js
+ * summary:     controller for handling user login
+ *              - mounted on /login (not auth protected)
+ */
+
 // TODO: redo this with new strategy and controller class
 
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
-const authHelper = require('../auth/authHelper');
-
+const { createAccessToken } = require('../auth/auth');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -61,8 +68,6 @@ router.get('/', async (req, res) => {
         // validate password
         const passwordValid = await bcrypt.compare(loginPassword, user.password);
 
-        console.log(loginPassword);
-
         if (!passwordValid) {
             res.status(403).json({
                 msg: 'invalid password'
@@ -74,7 +79,7 @@ router.get('/', async (req, res) => {
         // TODO: set refresh token as cookie and in db
 
         // password validated, gen a access token
-        const accessToken = await authHelper.createAccessToken(user._id);
+        const accessToken = await createAccessToken(user._id);
 
         res.status(200).json({
             msg: 'sucess',

@@ -1,4 +1,13 @@
 
+/**
+ * name:        eric stoutenburg
+ * email:       eric.stoutenburg@baysideonline.com
+ * date:        07 06 2020
+ * file:        inventoryItem.js
+ * summary:     controller for inventory item data / objects
+ *              - this is mounted on /api/inventory/item
+ */
+
 const express = require('express');
 const controller = require('../helper/controller');
 const InventoryItem = require('../models/InventoryItem');

@@ -1,4 +1,12 @@
 
+/**
+ * name:        eric stoutenburg
+ * email:       eric.stoutenburg@baysideonline.com
+ * date:        07 06 2020
+ * file:        ticket.js
+ * summary:     controller for inventory location data / objects
+ *              - this is mounted on /api/inventory/location
+ */
 
 const express = require('express');
 const { 

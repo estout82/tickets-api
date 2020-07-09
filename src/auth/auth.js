@@ -1,9 +1,34 @@
 
+/**
+ * name:        eric stoutenburg
+ * email:       eric.stoutenburg@baysideonline.com
+ * date:        07 06 2020
+ * file:        auth.js
+ * summary:     middleware to check is a user is authed
+ */
+
 // TODO: send password as hash with user and password
 // TODO: nonce type thing to prevent replay attacks
 
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+const hashPassword = async (password) => {
+    return bcrypt.hash(password, 10); // this is a promise
+}
+
+const createAccessToken = (userOid) => {
+    return jwt.sign({ oid: userOid }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1hr',
+        notBefore: '10ms'
+    });
+};
+
+const createRefreshToken = (userOid) => {
+    // TODO: implement this
+    return null;
+};
 
 const auth = async (req, res, next) => {
     // check for authorization header
@@ -56,4 +81,9 @@ const auth = async (req, res, next) => {
     }
 };
 
-module.exports = auth;
+module.exports = {
+    auth,
+    hashPassword,
+    createAccessToken,
+    createRefreshToken
+};

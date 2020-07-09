@@ -1,4 +1,13 @@
 
+/**
+ * name:        eric stoutenburg
+ * email:       eric.stoutenburg@baysideonline.com
+ * date:        07 06 2020
+ * file:        ticket.js
+ * summary:     controller for ticket data / objects
+ *              - this is mounted on /api/ticket
+ */
+
 const express = require('express');
 const controller = require('../helper/controller');
 const Ticket = require('../models/Ticket');

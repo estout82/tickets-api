@@ -1,4 +1,13 @@
 
+/**
+ * name:        eric stoutenburg
+ * email:       eric.stoutenburg@baysideonline.com
+ * date:        07 06 2020
+ * file:        user.js
+ * summary:     controller for user data / objects
+ *              - this is mounted on /api/user
+ */
+
 const express = require('express');
 const { 
     createReadAllHandler,
@@ -13,7 +22,7 @@ const {
     handleNotImplemented
 } = require('../helper/controller');
 const validate = require('../models/User');
-const authHelper = require('../auth/authHelper');
+const { hashPassword } = require('../auth/auth');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -65,7 +74,7 @@ router.post('/create', async (req, res, next) => {
             let plainTextPassword = Buffer.from(req.body.password, 'base64')
                 .toString('ascii');
 
-            let hashedPassword = await authHelper.hashPassword(plainTextPassword);
+            let hashedPassword = await hashPassword(plainTextPassword);
 
             req.body.password = hashedPassword;
         } catch (err) {
@@ -76,10 +85,12 @@ router.post('/create', async (req, res, next) => {
 
             return;
         }
+    } else if (req.body.sso === 'aad') {
+        
     } else {
         return res.status(400).json({
             status: 'err',
-            msg: 'sso is not supported at theis time'
+            msg: 'invalid sso type'
         });
     }
 
