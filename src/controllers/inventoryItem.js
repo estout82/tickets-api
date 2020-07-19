@@ -10,10 +10,23 @@
 
 const express = require('express');
 const controller = require('../helper/controller');
+const auth = require('../auth/auth');
 const InventoryItem = require('../models/InventoryItem');
 
 let router = express.Router();
 
+/**
+ * auth
+ */
+router.get('/', auth(['all', 'inv.all', 'inv.item.read']));
+router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
+router.post('/create', auth(['all', 'inv.all', 'inv.item.read']));
+router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
+router.delete('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
+
+/**
+ * routes
+ */
 router.get('/', async (req, res, next) => {
     try {
         let queryResult = await InventoryItem.find()

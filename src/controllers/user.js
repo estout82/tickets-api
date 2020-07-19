@@ -22,11 +22,23 @@ const {
     handleNotImplemented
 } = require('../helper/controller');
 const validate = require('../models/User');
+const { auth } = require('../auth/auth');
 const { hashPassword } = require('../auth/auth');
 const User = require('../models/User');
+const UserRole = require('../models/UserRole');
 
 const router = express.Router();
 
+// setup auth for all routes --------------------------------------
+router.get('/', auth(['all', 'user.all', 'user.read']));
+router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.read']));
+router.post('/create', auth(['all', 'user.all', 'user.create']));
+router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.update']));
+router.delete('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.delete']));
+router.get('/role', auth(['all', 'user.role.all', 'user.role.read']));
+router.post('/role/create', auth(['all', 'user.role.all', 'user.role.update']));
+
+// routes ---------------------------------------------------------
 const readAllQueryCallback = async () => {
     return User
     .find()
@@ -41,6 +53,7 @@ router.get('/',
 const readQueryCallback = async (id) => {
     return User
     .findById(id)
+    .populate('roles.role')
     .exec();
 }
 
@@ -122,5 +135,13 @@ router.post('/create', async (req, res, next) => {
 router.patch('/:id([0-9a-zA-Z]{24})', handleNotImplemented);
 
 router.delete('/:id([0-9a-zA-Z]{24})', handleNotImplemented);
+
+// role routes ----------------------------------------------------
+
+// TODO: move this to its own file?
+
+router.get('/role', handleNotImplemented);
+
+router.post('/role/create', createCreateHandler(UserRole));
 
 module.exports = router;

@@ -15,6 +15,7 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
+const auth = require('../auth/auth');
 const {
     handleQueryError,
     handleValidateError,
@@ -27,6 +28,18 @@ const InventoryItem = require('../models/InventoryItem');
 
 const router = express.Router();
 
+/**
+ * auth
+ */
+router.get('/', auth(['all', 'inv.all', 'inv.assignment.read']));
+router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.assignment.read']));
+router.post('/create', auth(['all', 'inv.all', 'inv.assignment.create']));
+router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.assignment.update']));
+router.delete('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.assignment.delete']));
+
+/**
+ * routes
+ */
 router.get('/', async (req, res, next) => {
     try {
         let data = await InventoryAssignment.find();

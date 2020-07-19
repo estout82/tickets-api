@@ -10,10 +10,23 @@
 
 const express = require('express');
 const controller = require('../helper/controller');
+const auth = require('../auth/auth');
 const Ticket = require('../models/Ticket');
 
 const router = express.Router();
 
+/**
+ * auth
+ */
+router.get('/', auth(['all', 'ticket.all', 'ticket.read']));
+router.get('/:id([0-9a-zA-Z])', auth(['all', 'ticket.all', 'ticket.read']));
+router.post('/create', auth(['all', 'ticket.all', 'ticket.create']));
+router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'ticket.all', 'ticket.update']));
+router.delete('/([0-9a-zA-Z]{24})', auth(['all', 'ticket.all', 'ticket.delete']));
+
+/**
+ * routes
+ */
 const readAllQueryCallback = async () => {
     return Ticket
     .find()

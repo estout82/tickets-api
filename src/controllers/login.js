@@ -9,6 +9,7 @@
  */
 
 // TODO: redo this with new strategy and controller class
+// TODO: add refresh tokens
 
 const express = require('express');
 const bcrypt = require('bcrypt');
@@ -18,6 +19,15 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+/**
+ * auth
+ */
+
+ // none - login is unprotected
+
+/**
+ * routes
+ */
 router.get('/', async (req, res) => {
     // check for credentials in header
     const credentials = req.get('x-login');

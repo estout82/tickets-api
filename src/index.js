@@ -1,4 +1,6 @@
 
+// TODO: use cors
+
 const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
@@ -6,6 +8,7 @@ const helmet = require('helmet');
 const debug = require('./helper/debug');
 const session = require('express-session');
 const passport = require('passport');
+const cors = require('cors');
 
 // import environment variables
 require('dotenv').config();
@@ -33,26 +36,26 @@ mongoose.connect(process.env.DB_CONNECTION_URL, {
 })
 .then(() => {
     console.log('db connection sucess');
-}).catch((err) => {
+})
+.catch((err) => {
     console.error(err.message);
 });
 
 // middleware
-app.use('/api', morgan('common'));
+app.use(cors());
+app.use(morgan('common'));
 app.use(helmet());
 app.use(express.json());
-app.use('/api', auth); // require auth for whole api
 app.use(passport.initialize());
 
 // routes
+app.use('/login', loginController);
 app.use('/api/ticket', ticketController);
 app.use('/api/ticket/category', ticketCategoryController);
 app.use('/api/user', userController);
 app.use('/api/inventory/item', inventoryItemController);
 app.use('/api/inventory/assignment', inventoryAssignmentController);
 app.use('/api/inventory/location', inventoryLocationController);
-app.use('/login',loginController);
-app.use('/', testAuth);
 
 // not found middleware
 app.use((req, res) => {

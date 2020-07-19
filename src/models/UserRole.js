@@ -8,7 +8,7 @@ const schema = Schema({
         type: String,
         required: true
     },
-    permissions: {
+    perms: {
         type: [String],
         default: null
     }

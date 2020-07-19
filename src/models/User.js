@@ -30,25 +30,35 @@ const schema = Schema({
     password: {
         type: String
     },
+    userType: {
+        type: String,
+        enum: [ 'admin', 'user', 'tech' ]
+    },
     roles: {
-        type: [Schema.Types.ObjectId],
-        ref: 'UserRole',
-        validate: {
-            validator: async (value) => {
-                let valid = true;
+        type: [
+            { 
+                role: {
+                    type: Schema.Types.ObjectId,
+                    ref: 'UserRole',
+                    validate: {
+                        validator: async (value) => {
+                            let valid = true;
 
-                // loop through every value and see if its in the db
-                value.forEach(async (roleId) => {
-                    // only check if valid is still true
-                    if (valid) {
-                        valid = validate.validateId(UserRole, roleId);
+                            // loop through every value and see if its in the db
+                            value.forEach(async (roleId) => {
+                                // only check if valid is still true
+                                if (valid) {
+                                    valid = validate.validateId(UserRole, roleId);
+                                }
+                            });
+
+                            return valid;
+                        },
+                        message: props => `${props.value} is not a valid oid (or doesn't exist)`
                     }
-                });
-
-                return valid;
-            },
-            message: props => `${props.value} is not a valid oid (or doesn't exist)`
-        }
+                }
+            }
+        ],
     },
     refreshToken: {
         type: String,

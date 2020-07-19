@@ -9,6 +9,7 @@
  */
 
 const express = require('express');
+const auth = require('../auth/auth');
 const { 
     createReadAllHandler,
     createReadHandler,
@@ -20,6 +21,18 @@ const InventoryLocation = require('../models/InventoryLocation');
 
 const router = express.Router();
 
+/**
+ * auth
+ */
+router.get('/', auth(['all', 'inv.all', 'inv.location.read']));
+router.get('/:id([0-9a-zA-Z]{24]})', auth(['all', 'inv.all', 'inv.location.read']));
+router.post('/create', auth(['all', 'inv.all', 'inv.location.create']));
+router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.location.update']));
+router.delete('/:id([0-9a-zA-Z])', auth(['all', 'inv.all', 'inv.location.delete']));
+
+/**
+ * routes
+ */
 router.get('/', 
     createReadAllHandler(InventoryLocation));
 
