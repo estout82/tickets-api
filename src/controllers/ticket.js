@@ -10,7 +10,7 @@
 
 const express = require('express');
 const controller = require('../helper/controller');
-const auth = require('../auth/auth');
+const { auth } = require('../auth/auth');
 const Ticket = require('../models/Ticket');
 
 const router = express.Router();

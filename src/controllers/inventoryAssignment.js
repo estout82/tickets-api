@@ -15,7 +15,7 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
-const auth = require('../auth/auth');
+const { auth } = require('../auth/auth');
 const {
     handleQueryError,
     handleValidateError,

@@ -9,7 +9,7 @@
  */
 
 const express = require('express');
-const auth = require('../auth/auth');
+const { auth } = require('../auth/auth');
 const { 
     createReadAllHandler,
     createReadHandler,
