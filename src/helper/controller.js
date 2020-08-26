@@ -111,10 +111,42 @@ const createReadHandler = (model, queryCallback = null) => {
     };
 };
 
+const createReadPageHandler = (model, documentsPerPage, queryCallback = null) => {
+    return async (req, res, next) => {
+        const page = req.params.page - 1;
+
+        // ensure we dont try to access negative pages
+        if (page < 0) {
+            res.status(404).json({
+                status: 'err',
+                msg: `invalid page ${page + 1}`
+            });
+            return;
+        }
+
+        try {
+            let queryResult = null;
+
+            if (queryCallback) {
+                queryResult = await queryCallback(model, page, documentsPerPage);
+            } else {
+                queryResult = await model.find(null, null, { skip: documentsPerPage * page })
+                    .limit(documentsPerPage)
+                    .exec();
+            }
+
+            return res.status(200).json({
+                status: 'ok',
+                data: queryResult
+            });
+        } catch (err) {
+            return handleQueryError(err, req, res, next);
+        }
+    }
+}
+
 const createCreateHandler = (model) => {
     return async (req, res, next) => {
-        console.log('hi');
-
         // ensure body is not empty
         if (!req.body) {
             return handleEmptyRequest(req, res, next);
@@ -139,7 +171,7 @@ const createCreateHandler = (model) => {
                 data: [ saveResult._id ]
             });
         } catch (err) {
-            return handleSaveError(req, res, err);
+            return handleSaveError(err, req, res, next);
         }
     };
 };
@@ -202,6 +234,7 @@ module.exports = {
     createReadAllHandler,
     createUpdateHandler,
     createReadHandler,
+    createReadPageHandler,
     createCreateHandler,
     handleValidateError,
     handleQueryError,

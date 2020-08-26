@@ -9,6 +9,7 @@
 
 // TODO: send password as hash with user and password
 // TODO: nonce type thing to prevent replay attacks
+// TODO: figure out issuer / audience stuff
 
 const express = require('express');
 const jwt = require('jsonwebtoken');
@@ -27,9 +28,11 @@ const createAccessToken = (userOid) => {
     });
 };
 
-const createRefreshToken = (userOid) => {
-    // TODO: implement this
-    return null;
+const createRefreshToken = (userOid, userType) => {
+    return jwt.sign({ oid: userOid, userType: userType }, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: '7d',
+        notBefore: '10ms'
+    });
 };
 
 // factory for auth middleware

@@ -35,7 +35,7 @@ const schema = Schema({
     },
     location: {
         type: Schema.Types.ObjectId,
-        ref: 'Inventory Location',
+        ref: 'InventoryLocation',
         validate: {
             validator: async (value) => {
                 return await validateId(InventoryLocation, value);

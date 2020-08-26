@@ -22,6 +22,14 @@ const schema = Schema({
         required: true,
         match: [ /([^@]*)@([^\.]+)\.(.+)/, 'email is not valid' ]
     },
+    organization: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization'
+    },
+    department: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization'
+    },
     sso: {
         type: String,
         enum: ['none', 'aad'],
@@ -33,6 +41,15 @@ const schema = Schema({
     userType: {
         type: String,
         enum: [ 'admin', 'user', 'tech' ]
+    },
+    tickets: {
+        type: [Schema.Types.ObjectId]
+    },
+    assets: {
+        type: [Schema.Types.ObjectId]
+    },
+    items: {
+        type: [Schema.Types.ObjectId]
     },
     roles: {
         type: [

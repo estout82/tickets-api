@@ -12,6 +12,7 @@ const express = require('express');
 const { 
     createReadAllHandler,
     createReadHandler,
+    createReadPageHandler,
     createUpdateHandler,
     createCreateHandler,
     isBodyEmpty,
@@ -60,6 +61,18 @@ const readQueryCallback = async (id) => {
 router.get('/:id([0-9a-zA-Z]{24})',
     createReadHandler(User, readQueryCallback));
 
+const readPageQueryCallback = async (model, page, documentsPerPage) => {
+    return model.find(null, null, { skip: page * documentsPerPage })
+        .select('_id firstName lastName assets items tickets email organization department')
+        .populate('organization')
+        .populate('department')
+        .limit(documentsPerPage)
+        .exec(); 
+}
+
+router.get('/page/:page([0-9]+)', 
+    createReadPageHandler(User, 25));
+
 // custom because we have to handle password hashing and what not
 router.post('/create', async (req, res, next) => {
     // ensure body is not empty
@@ -99,7 +112,7 @@ router.post('/create', async (req, res, next) => {
             return;
         }
     } else if (req.body.sso === 'aad') {
-        
+        // TODO: create user with aad auth
     } else {
         return res.status(400).json({
             status: 'err',

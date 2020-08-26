@@ -14,10 +14,12 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { createAccessToken } = require('../auth/auth');
+const { createAccessToken, createRefreshToken } = require('../auth/auth');
 const User = require('../models/User');
+const debug = require('../helper/debug');
 
 const router = express.Router();
+const refreshTokenCookieName = '981yiuh4ejkwjkhiquwdfnawkjn=';
 
 /**
  * auth
@@ -29,11 +31,56 @@ const router = express.Router();
  * routes
  */
 router.get('/', async (req, res) => {
+    // check for refresh token
+    const refreshCookie = req.cookies.refresh;
+
+    console.log(refreshCookie);
+
+    if (refreshCookie) {
+        // validate refresh token and issue new refresh token
+        if (jwt.verify(refreshCookie, process.env.REFRESH_TOKEN_SECRET)) {
+            // TODO: store refresh tokens in db?
+
+            // attempt to decode token
+            let decodedRefreshToken = null;
+
+            try {
+                decodedRefreshToken = jwt.decode(refreshCookie);
+            } catch (err) {
+                res.status(500).json({
+                    status: 'err',
+                    msg: 'bad refresh token',
+                    debug: debug.replace(err)
+                });
+
+                return;
+            }
+
+            const newAccessToken = createAccessToken(decodedRefreshToken.oid);
+            const newRefreshToken = createRefreshToken(decodedRefreshToken.oid, 
+                decodedRefreshToken.userType);
+
+            // save new refresh token as cookie
+            res.cookie('refresh', newRefreshToken);
+            
+            // send access token in response body
+            res.status(200).json({
+                msg: 'sucess',
+                data: {
+                    token: newAccessToken,
+                    userType: decodedRefreshToken.userType
+                }
+            });
+
+            return;
+        }
+    }
+
     // check for credentials in header
     const credentials = req.get('x-login');
 
     if (!credentials) {
-        res.status(400).json({
+        res.status(401).json({
             msg: 'no credentials'
         });
 
@@ -65,7 +112,8 @@ router.get('/', async (req, res) => {
 
     // look up user in db
     try {
-        let user = await User.findOne({ email: loginEmail });
+        let user = await User.findOne({ email: loginEmail })
+        .select('password userType');
 
         if (!user) {
             res.status(404).json({
@@ -91,12 +139,17 @@ router.get('/', async (req, res) => {
         // password validated, gen a access token
         const accessToken = await createAccessToken(user._id);
 
+        // store refresh token as a cookie
+        const refreshToken = await createRefreshToken(user._id, user.userType);
+
+        res.cookie('refresh', refreshToken);
+
         res.status(200).json({
             msg: 'sucess',
             data: {
-                token: accessToken
-            },
-            debug: jwt.decode(accessToken)
+                token: accessToken,
+                userType: user.userType
+            }
         });
 
         return;

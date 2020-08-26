@@ -16,14 +16,14 @@ const schema = Schema({
     },
     kind: {
         type: Schema.Types.ObjectId,
+        ref: InventoryAssetKind,
         validate: {
             validator: async value => await validateId(InventoryAssetKind, value),
             message: props => `${props.value} is not an inventory asset kind id`
         }
     },
     customId: {
-        type: String,
-        unique: true
+        type: String
     },
     isRefurbished: {
         type: Boolean
@@ -46,3 +46,5 @@ const schema = Schema({
         }
     }
 });
+
+module.exports = mongoose.model('InventoryAsset', schema);
