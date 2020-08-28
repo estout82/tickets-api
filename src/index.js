@@ -27,6 +27,7 @@ const inventoryLocationController = require('./controllers/inventoryLocation');
 const inventoryItemController = require('./controllers/inventoryItem');
 const inventoryAssignmentController = require('./controllers/inventoryAssignment');
 const inventoryAssetController = require('./controllers/inventoryAsset');
+const organizationController = require('./controllers/organization');
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use('/api/inventory/item', inventoryItemController);
 app.use('/api/inventory/asset', inventoryAssetController);
 app.use('/api/inventory/assignment', inventoryAssignmentController);
 app.use('/api/inventory/location', inventoryLocationController);
+app.use('/api/organization', organizationController);
 
 // not found middleware
 app.use((req, res) => {

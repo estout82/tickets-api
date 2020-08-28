@@ -8,7 +8,7 @@ const handleGeneralError = (err, req, res, next) => {
 
 const handleValidateError = (err, req, res, next) => {
     const data = {};
-    const errors = err.errors;
+    const errors = err.errors ? err.errors : {};
 
     // extract nessecary data from each error
     Object.keys(errors).forEach((key) => {
@@ -183,9 +183,11 @@ const createUpdateHandler = (model) => {
         const id = req.params.id;
         let doc = null;
 
+        console.log(req.body);
+
         // ensure request body is not null
-        if (!req.body) {
-            return handleEmptyRequest(req, res);
+        if (!req.body || Object.keys(req.body).length < 1) {
+            return handleEmptyRequest(req, res, next);
         }
 
         // get doc from db
@@ -212,7 +214,7 @@ const createUpdateHandler = (model) => {
         try {
             let validateResult = await doc.validate();
         } catch (err) {
-            return handleValidateError(req, res, err);
+            return handleValidateError(err, req, res, next);
         }
 
         // save updated doc

@@ -53,7 +53,7 @@ const readQueryCallback = async (id) => {
 router.get('/', 
     controller.createReadAllHandler(Ticket, readAllQueryCallback));
 
-router.get('/:id([0-9a-zA-Z])', 
+router.get('/:id([0-9a-zA-Z]{24})', 
     controller.createReadHandler(Ticket, readQueryCallback));
 
 router.post('/create', 

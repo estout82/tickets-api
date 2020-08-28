@@ -18,6 +18,10 @@ const ticketSchema = mongoose.Schema({
         type: String,
         default: null
     },
+    number: {
+        type: Number,
+        required: true
+    },
     category: {
         type: Schema.Types.ObjectId,
         ref: 'TicketCategory',

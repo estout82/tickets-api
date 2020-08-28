@@ -31,13 +31,13 @@ const UserRole = require('../models/UserRole');
 const router = express.Router();
 
 // setup auth for all routes --------------------------------------
-router.get('/', auth(['all', 'user.all', 'user.read']));
-router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.read']));
-router.post('/create', auth(['all', 'user.all', 'user.create']));
-router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.update']));
-router.delete('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.delete']));
-router.get('/role', auth(['all', 'user.role.all', 'user.role.read']));
-router.post('/role/create', auth(['all', 'user.role.all', 'user.role.update']));
+// router.get('/', auth(['all', 'user.all', 'user.read']));
+// router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.read']));
+// router.post('/create', auth(['all', 'user.all', 'user.create']));
+// router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.update']));
+// router.delete('/:id([0-9a-zA-Z]{24})', auth(['all', 'user.all', 'user.delete']));
+// router.get('/role', auth(['all', 'user.role.all', 'user.role.read']));
+// router.post('/role/create', auth(['all', 'user.role.all', 'user.role.update']));
 
 // routes ---------------------------------------------------------
 const readAllQueryCallback = async () => {
@@ -63,7 +63,7 @@ router.get('/:id([0-9a-zA-Z]{24})',
 
 const readPageQueryCallback = async (model, page, documentsPerPage) => {
     return model.find(null, null, { skip: page * documentsPerPage })
-        .select('_id firstName lastName assets items tickets email organization department')
+        .select('firstName lastName assets items tickets email organization department _id')
         .populate('organization')
         .populate('department')
         .limit(documentsPerPage)
@@ -71,7 +71,7 @@ const readPageQueryCallback = async (model, page, documentsPerPage) => {
 }
 
 router.get('/page/:page([0-9]+)', 
-    createReadPageHandler(User, 25));
+    createReadPageHandler(User, 25, readPageQueryCallback));
 
 // custom because we have to handle password hashing and what not
 router.post('/create', async (req, res, next) => {
@@ -145,7 +145,7 @@ router.post('/create', async (req, res, next) => {
 });
 
 // TODO: fix this and make a seperate change password endpoint
-router.patch('/:id([0-9a-zA-Z]{24})', handleNotImplemented);
+router.patch('/:id([0-9a-zA-Z]{24})', createUpdateHandler(User));
 
 router.delete('/:id([0-9a-zA-Z]{24})', handleNotImplemented);
 
