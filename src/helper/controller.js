@@ -11,7 +11,7 @@ const handleValidateError = (err, req, res, next) => {
     const errors = err.errors ? err.errors : {};
 
     // extract nessecary data from each error
-    Object.keys(errors).forEach((key) => {
+    Object.keys(errors).forEach(key => {
         const errorValue = errors[key]; 
 
         data[errorValue.path] = {
@@ -182,8 +182,6 @@ const createUpdateHandler = (model) => {
     return async (req, res, next) => {
         const id = req.params.id;
         let doc = null;
-
-        console.log(req.body);
 
         // ensure request body is not null
         if (!req.body || Object.keys(req.body).length < 1) {

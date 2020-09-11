@@ -18,11 +18,11 @@ let router = express.Router();
 /**
  * auth
  */
-router.get('/', auth(['all', 'inv.all', 'inv.item.read']));
-router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
-router.post('/create', auth(['all', 'inv.all', 'inv.item.read']));
-router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
-router.delete('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
+// router.get('/', auth(['all', 'inv.all', 'inv.item.read']));
+// router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
+// router.post('/create', auth(['all', 'inv.all', 'inv.item.read']));
+// router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
+// router.delete('/:id([0-9a-zA-Z]{24})', auth(['all', 'inv.all', 'inv.item.read']));
 
 /**
  * routes

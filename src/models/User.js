@@ -59,17 +59,7 @@ const schema = Schema({
                     ref: 'UserRole',
                     validate: {
                         validator: async (value) => {
-                            let valid = true;
-
-                            // loop through every value and see if its in the db
-                            value.forEach(async (roleId) => {
-                                // only check if valid is still true
-                                if (valid) {
-                                    valid = validate.validateId(UserRole, roleId);
-                                }
-                            });
-
-                            return valid;
+                            return validate.validateId(UserRole, value);;
                         },
                         message: props => `${props.value} is not a valid oid (or doesn't exist)`
                     }
