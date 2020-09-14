@@ -2,6 +2,7 @@
 const express = require('express');
 const controller = require('../helper/controller');
 const Order = require('../models/Order');
+const debug = require('../helper/debug');
 
 /**
  * constants ----------------------------------------------------------------------
@@ -37,7 +38,7 @@ router.get('/',
  */
 const readQueryCallback = async (id) => {
     return Order.findById(id)
-        .populate('items.id', 'name')
+        .populate('items.item', 'name')
         .exec();
 }
 
@@ -47,7 +48,8 @@ router.get('/:id([0-9a-zA-Z]{24})',
 /**
  * responds with shallow data about a single page of orders
  */
-router.get('/page/:number([0-9]+)', controller.createReadPageHandler(Order, 25));
+router.get('/page/:number([0-9]+)', 
+    controller.createReadPageHandler(Order, numOrdersPerPage));
 
 /**
  * this route responds with various meta data about the order data
@@ -71,9 +73,11 @@ router.get('/meta', async (req, res, next) => {
     });
 });
 
-router.post('/create', controller.createCreateHandler(Order));
+router.post('/create', 
+    controller.createCreateHandler(Order));
 
-router.patch('/:id([0-9a-zA-Z]{24})', controller.createUpdateHandler(Order));
+router.patch('/:id([0-9a-zA-Z]{24})', 
+    controller.createUpdateHandler(Order));
 
 router.get('/reservePoNumber', async (req, res, next) => {
     res.json({
@@ -89,11 +93,52 @@ router.post('/releasePoNumber/:number([0-9]+)', async (req, res, next) => {
     });
 });
 
+/**
+ * responds with all data of an order with specific search
+ * reqBody:
+ *  - number: number or order to search
+ */
 router.post('/search', async (req, res, next) => {
-    res.json({
-        status: 'err',
-        msg: 'search not implemented'
-    });
+    let orderNumber = null;
+
+    // get the order number from req body
+    if (req.body && req.body.number) {
+        orderNumber = req.body.number;
+    } else {
+        res.status(400).json({
+            status: 'error',
+            msg: 'order number missing from request body'
+        });
+        return;
+    }
+
+    try {
+        let searchResult = await Order.findOne({ number: orderNumber })
+            .populate('items.item', 'name')
+            .exec();
+
+        if (searchResult) {
+            res.status(200).json({
+                status: 'ok',
+                data: searchResult
+            });
+            return;
+        } else {
+            res.status(200).json({
+                status: 'ok',
+                msg: `no order with number ${orderNumber}`
+            });
+            return;
+        }
+    } catch (error) {
+        console.dir(error);
+        res.status(500).json({
+            status: 'error',
+            msg: 'query error during search query',
+            debug: debug.replace(error)
+        });
+        return;
+    }
 });
 
 module.exports = router;

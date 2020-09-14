@@ -14,7 +14,7 @@ const statusEnum = [
 ];
 
 const orderItemSchema = Schema({
-    id: {
+    item: {
         type: Schema.Types.ObjectId,
         ref: 'InventoryItem'
     },
