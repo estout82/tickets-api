@@ -25,11 +25,12 @@ async function initMetaCollection() {
         metaCategory: "order",
         categories: [],
         statuses: [],
-        nextPoNumber: 1
+        nextOrderNumber: 1
     };
 
     const defaultTicketMetaData = {
         metaCategory: "ticket",
+        nextTicketNumber: 1,
         categories: [],
         statuses: [],
         formDefinitions: {

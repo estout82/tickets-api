@@ -1,7 +1,11 @@
 
-function error(msg, code) {
+function error(msg, code, debugError) {
     console.error(`error ${code}: ${msg}`);
     
+    if (debugError) {
+        console.error(`debug: ${debugError}`);
+    }
+
     // TODO: log to file
 }
 
