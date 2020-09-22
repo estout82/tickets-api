@@ -6,25 +6,14 @@ const handleGeneralError = (err, req, res, next) => {
     next(err);
 }
 
+// TODO: fix this
 const handleValidateError = (err, req, res, next) => {
-    const data = {};
-    const errors = err.errors ? err.errors : {};
-
-    // extract nessecary data from each error
-    Object.keys(errors).forEach(key => {
-        const errorValue = errors[key]; 
-
-        data[errorValue.path] = {
-            msg: errorValue.properties.message // extract message
-        };
-    });
-
     // forward to error middleware
     next({
         status: 'request err',
         msg: 'invalid data',
         friendlyMsg: 'Error while saving, invalid data',
-        data: data
+        debug: debug.replace(err)
     });
 }
 
@@ -181,6 +170,50 @@ const createCreateHandler = (model) => {
     };
 };
 
+// helper function to recursivley update document
+// TODO: cleanup
+const updateDocumentFields = (data, doc) => {
+    // iterate over document keys and process
+    Object.keys(data).forEach(key => {
+        const value = data[key];
+
+        // if value is object, process recursivley
+        if (typeof value === 'object') {
+            // only update field if the new object has properties
+            if (Object.keys(value).length > 0) {
+                // if document typee is array, and key does not exist, need to add element to array
+                if (doc instanceof Array && !doc[key]) {
+                    doc.push(value);
+                    console.log(doc);
+                    return;
+                }
+
+                doc[key] = updateDocumentFields(value, doc[key] ? doc[key] : {});
+                return;
+            } else {
+                // if value of value is {}, delete the object
+
+                // if type of doc (or sub doc) is array, remove the eleement specified by key from array
+                if (doc instanceof Array) {
+                    doc = [
+                        ...doc.slice(0, key),
+                        ...doc.slice(key + 1)
+                    ];
+                    return;
+                }
+
+                // if not array, just delete the property
+                delete doc[key];
+                return;
+            }
+        }
+
+        doc[key] = value;
+    });
+
+    return doc;
+}
+
 // factory method for creating a generic update handler for a controller
 const createUpdateHandler = (model) => {
     // return function w/ local binding for model
@@ -208,10 +241,7 @@ const createUpdateHandler = (model) => {
         }
 
         // update doc fields
-        Object.keys(req.body).forEach((key) => {
-            const value = req.body[key];
-            doc[key] = value;
-        });
+        doc = updateDocumentFields(req.body, doc);
 
         // validate new fields
         try {
