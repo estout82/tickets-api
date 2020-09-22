@@ -86,6 +86,7 @@ app.use((err, req, res, next) => {
     const msg = err.msg ? err.msg : 'unknown server error';
     const data = err.data ? err.data : null;
     const debugMsg = err.debug ? err.debug : err;
+    const friendlyMsg = err.friendlyMsg ? err.friendlyMsg : null;
 
     console.log(err);
 
@@ -94,9 +95,10 @@ app.use((err, req, res, next) => {
         res.status(500);
     }
 
-    res.status(500).json({
+    res.json({
         status: status,
         msg: msg,
+        friendlyMsg: friendlyMsg,
         data: data,
         debug: debug.replace(debugMsg)
     });

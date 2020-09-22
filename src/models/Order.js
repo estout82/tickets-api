@@ -3,16 +3,6 @@ const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
-const statusEnum = [
-    "proposed",
-    "approved",
-    "partialApproved",
-    "ordered",
-    "partialOrdered",
-    "recieved",
-    "partialRecieved"
-];
-
 const orderItemSchema = Schema({
     item: {
         type: Schema.Types.ObjectId,
@@ -40,8 +30,7 @@ const schema = Schema({
         type: String
     },
     status: {
-        type: String,
-        enum: statusEnum
+        type: String
     },
     items: {
         type: [orderItemSchema]

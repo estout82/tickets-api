@@ -15,7 +15,7 @@ const handleValidateError = (err, req, res, next) => {
         const errorValue = errors[key]; 
 
         data[errorValue.path] = {
-            message: errorValue.properties.message // extract message
+            msg: errorValue.properties.message // extract message
         };
     });
 
@@ -23,6 +23,7 @@ const handleValidateError = (err, req, res, next) => {
     next({
         status: 'request err',
         msg: 'invalid data',
+        friendlyMsg: 'Error while saving, invalid data',
         data: data
     });
 }
@@ -32,6 +33,7 @@ const handleQueryError = (err, req, res, next) => {
     next({
         status: 'query err',
         msg: err.message,
+        friendlyMsg: 'Error while accessing database',
         debug: debug.replace(err)
     });
 }
@@ -41,6 +43,7 @@ const handleSaveError = (err, req, res, next) => {
     next({
         status: 'save err',
         msg: err.message,
+        friendlyMsg: 'Error while saving to database',
         debug: debug.replace(err)
     });
 }
@@ -48,15 +51,17 @@ const handleSaveError = (err, req, res, next) => {
 const handleEmptyRequest = (req, res, next) => {
     res.status(400);
     next({
-        status: 'err',
-        msg: 'empty request body'
+        status: 'error',
+        msg: 'empty request body',
+        friendlyMsg: 'Error while saving, no data in request'
     });
 }
 
 const handleNotImplemented = (req, res) => {
     res.status(400).json({
-        status: 'err',
-        msg: 'not implemented'
+        status: 'error',
+        msg: 'not implemented',
+        friendlyMsg: 'Error while saving, no route'
     });
 }
 
@@ -118,7 +123,7 @@ const createReadPageHandler = (model, documentsPerPage, queryCallback = null) =>
         // ensure we dont try to access negative pages
         if (page < 0) {
             res.status(404).json({
-                status: 'err',
+                status: 'error',
                 msg: `invalid page ${page + 1}`
             });
             return;
@@ -194,8 +199,8 @@ const createUpdateHandler = (model) => {
 
             if (!doc) {
                 return res.status(401).json({
-                    status: 'err',
-                    message: `${id} not in collection`
+                    status: 'error',
+                    msg: `${id} not in collection`
                 });
             }
         } catch (err) {
@@ -222,6 +227,7 @@ const createUpdateHandler = (model) => {
             res.status(200).json({
                 status: 'ok',
                 msg: 'updated',
+                friendlyMsg: 'Save sucessful',
                 data: [queryResult._id]
             });
         } catch (err) {
