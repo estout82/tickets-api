@@ -23,15 +23,7 @@ const ticketSchema = mongoose.Schema({
         required: true
     },
     category: {
-        type: Schema.Types.ObjectId,
-        ref: 'TicketCategory',
-        validate: {
-            validator: async (value) => {
-                let result = await validate.validateId(TicketCategory, value);
-                return result;
-            },
-            message: props => `${props.value} is not a ticket category id`
-        }
+        type: String
     },
     organization: {
         type: Schema.Types.ObjectId,
