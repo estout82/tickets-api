@@ -12,7 +12,7 @@ const express = require('express');
 const controller = require('../helper/controller');
 const { auth } = require('../auth/auth');
 const Ticket = require('../models/Ticket');
-const { handleSaveError } = require('../helper/controller');
+const { handleSaveError, handleValidateError } = require('../helper/controller');
 const categoryRouter = require('./ticketCategory');
 const statusRouter = require('./ticketStatus');
 const formRouter = require('./ticketForm');
@@ -21,7 +21,9 @@ const flowRouter = require('./ticketFlow');
 /**
  * constants ----------------------------------------------------------------------
  */
-const numTicketsPerPage = 25;
+const NUM_TICKETS_PER_PAGE = 25;
+const DEFAULT_FORM = '';
+const DEFAULT_STATUS = ''; // FIXME: store this in the meta db
 
 const router = express.Router();
 
@@ -84,10 +86,44 @@ router.get('/:id([0-9a-zA-Z]{24})',
  * responds with shallow data about a single page of tickets
  */
 router.get('/page/:number([0-9]+)', 
-    controller.createReadPageHandler(Ticket, numTicketsPerPage, readAllQueryCallback));
+    controller.createReadPageHandler(Ticket, NUM_TICKETS_PER_PAGE, readAllQueryCallback));
 
-router.post('/create', 
-    controller.createCreateHandler(Ticket));
+router.post('/create', async (req, res, next) => {
+    // ensure body is not empty
+    if (!req.body) {
+        return handleEmptyRequest(req, res, next);
+    }
+
+    // build data object
+    let data = {...req.body};
+    
+    // see if status is set
+    if (!data.status) {
+        data.status = DEFAULT_STATUS;
+    }
+
+    let doc = new Ticket(req.body);
+
+    // validate doc
+    try {
+        let validateError = await doc.validate();
+    } catch (err) {
+        return handleValidateError(err, req, res, next);
+    }
+
+    // preform query
+    try {
+        let saveResult = await doc.save();
+
+        return res.status(201).json({
+            status: 'ok',
+            msg: 'created',
+            data: [ saveResult._id ]
+        });
+    } catch (err) {
+        return handleSaveError(err, req, res, next);
+    }
+});
 
 router.patch('/:id([0-9a-zA-Z]{24})', 
     controller.createUpdateHandler(Ticket));

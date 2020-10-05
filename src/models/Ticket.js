@@ -68,14 +68,6 @@ const schema = mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: 'TicketStatus'
     },
-    form: {
-        type: Schema.Types.ObjectId,
-        ref: 'TicketForm'
-    },
-    flows: {
-        type: [Schema.Types.ObjectId],
-        ref: 'TicketFlow'
-    },
     organization: {
         type: Schema.Types.ObjectId,
         ref: 'Organization',
