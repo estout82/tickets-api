@@ -110,6 +110,11 @@ const schema = mongoose.Schema({
     comments: {
         type: [commentSchema],
         default: null
+    },
+    // stores custom parameters collected by custom ticket form
+    // no need for sub doc _id
+    parameters: {
+        type: [{ value: String, label: String, name: String }]
     }
 });
 
