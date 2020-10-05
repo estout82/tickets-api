@@ -23,3 +23,5 @@ const schema = mongoose.Schema({
         type: [fieldSchema]
     }
 });
+
+module.exports = mongoose.model('TicketForm', schema);

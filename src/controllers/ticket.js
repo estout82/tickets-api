@@ -13,7 +13,10 @@ const controller = require('../helper/controller');
 const { auth } = require('../auth/auth');
 const Ticket = require('../models/Ticket');
 const { handleSaveError } = require('../helper/controller');
-const cateegoryRouter = require('./ticketCategory');
+const categoryRouter = require('./ticketCategory');
+const statusRouter = require('./ticketStatus');
+const formRouter = require('./ticketForm');
+const flowRouter = require('./ticketFlow');
 
 /**
  * constants ----------------------------------------------------------------------
@@ -34,7 +37,10 @@ const router = express.Router();
 /**
  * mount sub-routers
  */
-router.use('/category', cateegoryRouter);
+router.use('/category', categoryRouter);
+router.use('/status', statusRouter);
+router.use('/flow', flowRouter);
+router.use('/form', formRouter);
 
 /**
  * query callbacks
@@ -42,11 +48,12 @@ router.use('/category', cateegoryRouter);
 const readAllQueryCallback = async () => {
     return Ticket
     .find()
-    .select('title number category organization user')
+    .select('title number category organization user status')
     .populate([
         { path: 'user', select: 'firstName lastName email' },
         { path: 'organization', select: 'name' },
-        { path: 'category', select: 'name' }
+        { path: 'category', select: 'name' },
+        { path: 'status', select: 'name appearance' }
     ])
     .exec();
 };

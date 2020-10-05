@@ -19,4 +19,4 @@ const schema = mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('TicketCategory', schema);
+module.exports = mongoose.model('TicketFlow', schema);
