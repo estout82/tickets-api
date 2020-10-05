@@ -18,11 +18,11 @@ const router = express.Router();
 /**
  * auth
  */
-router.get('/',  auth(['all', 'ticket.all', 'ticket.category.read']));
-router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'ticket.all', 'ticket.category.read']));
-router.post('/create', auth(['all', 'ticket.all', 'ticket.category.create']));
-router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'ticket.all', 'ticket.category.update']));
-router.delete('/:id([0-9a-zA-Z])', auth(['all', 'ticket.all', 'ticket.category.delete']));
+// router.get('/',  auth(['all', 'ticket.all', 'ticket.category.read']));
+// router.get('/:id([0-9a-zA-Z]{24})', auth(['all', 'ticket.all', 'ticket.category.read']));
+// router.post('/create', auth(['all', 'ticket.all', 'ticket.category.create']));
+// router.patch('/:id([0-9a-zA-Z]{24})', auth(['all', 'ticket.all', 'ticket.category.update']));
+// router.delete('/:id([0-9a-zA-Z])', auth(['all', 'ticket.all', 'ticket.category.delete']));
 
 /**
  * routes

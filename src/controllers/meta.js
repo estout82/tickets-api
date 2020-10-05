@@ -3,8 +3,14 @@ const express = require('express');
 const metaHelper = require('../helper/meta');
 const Meta = require('../models/Meta');
 const log = require('../helper/log');
+const controller = require('../helper/controller');
 
 let router = express.Router();
+
+/**
+ * gets ALL metadata
+ */
+router.get('/', controller.createReadAllHandler(Meta));
 
 /**
  * gets ALL ticket metadata

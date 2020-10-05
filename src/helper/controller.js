@@ -1,5 +1,6 @@
 
 const express = require('express');
+const { Model } = require('mongoose');
 const debug = require('../helper/debug');
 
 const handleGeneralError = (err, req, res, next) => {
@@ -7,33 +8,33 @@ const handleGeneralError = (err, req, res, next) => {
 }
 
 // TODO: fix this
-const handleValidateError = (err, req, res, next) => {
+const handleValidateError = (error, req, res, next) => {
     // forward to error middleware
     next({
-        status: 'request err',
-        msg: 'invalid data',
+        status: 'error',
+        msg: 'request error: invalid data',
         friendlyMsg: 'Error while saving, invalid data',
-        debug: debug.replace(err)
+        debug: debug.replace(error)
     });
 }
 
-const handleQueryError = (err, req, res, next) => {
+const handleQueryError = (error, req, res, next) => {
     res.status(500);
     next({
-        status: 'query err',
-        msg: err.message,
+        status: 'error',
+        msg: `query error: ${error.message}`,
         friendlyMsg: 'Error while accessing database',
-        debug: debug.replace(err)
+        debug: debug.replace(error)
     });
 }
 
-const handleSaveError = (err, req, res, next) => {
+const handleSaveError = (error, req, res, next) => {
     res.status(500);
     next({
-        status: 'save err',
-        msg: err.message,
+        status: 'error',
+        msg: `save error: ${error.message}`,
         friendlyMsg: 'Error while saving to database',
-        debug: debug.replace(err)
+        debug: debug.replace(error)
     });
 }
 
@@ -172,47 +173,49 @@ const createCreateHandler = (model) => {
 
 // helper function to recursivley update document
 // TODO: cleanup
-const updateDocumentFields = (data, doc) => {
-    // iterate over document keys and process
-    Object.keys(data).forEach(key => {
-        const value = data[key];
+// const updateDocumentFields = (data, doc) => {
+//     // iterate over document keys and process
+//     Object.keys(data).forEach(key => {
+//         const value = data[key];
 
-        // if value is object, process recursivley
-        if (typeof value === 'object') {
-            // only update field if the new object has properties
-            if (Object.keys(value).length > 0) {
-                // if document typee is array, and key does not exist, need to add element to array
-                if (doc instanceof Array && !doc[key]) {
-                    doc.push(value);
-                    console.log(doc);
-                    return;
-                }
+//         // if value is object, process recursivley
+//         if (typeof value === 'object') {
+//             // only update field if the new object has properties
+//             if (Object.keys(value).length > 0) {
+//                 // if document type is array, and key does not exist, need to add element to array
+//                 if (doc instanceof Array && !doc[key]) {
+//                     doc.push(value);
 
-                doc[key] = updateDocumentFields(value, doc[key] ? doc[key] : {});
-                return;
-            } else {
-                // if value of value is {}, delete the object
+//                     return;
+//                 }
 
-                // if type of doc (or sub doc) is array, remove the eleement specified by key from array
-                if (doc instanceof Array) {
-                    doc = [
-                        ...doc.slice(0, key),
-                        ...doc.slice(key + 1)
-                    ];
-                    return;
-                }
+//                 doc[key] = updateDocumentFields(value, doc[key] ? doc[key] : {});
+//                 return;
+//             } else {
+//                 // if value of value is {}, delete the object
 
-                // if not array, just delete the property
-                delete doc[key];
-                return;
-            }
-        }
+//                 // if type of doc (or sub doc) is array, remove the eleement specified by key from array
+//                 if (doc instanceof Array) {
+//                     doc = [
+//                         ...doc.slice(0, key),
+//                         ...doc.slice(key + 1)
+//                     ];
+//                     return;
+//                 }
 
-        doc[key] = value;
-    });
+//                 // if not array, just delete the property
+//                 delete doc[key];
+//                 return;
+//             }
+//         }
 
-    return doc;
-}
+//         doc[key] = value;
+//     });
+
+//     console.log(doc);
+
+//     return doc;
+// }
 
 // factory method for creating a generic update handler for a controller
 const createUpdateHandler = (model) => {
@@ -226,42 +229,17 @@ const createUpdateHandler = (model) => {
             return handleEmptyRequest(req, res, next);
         }
 
-        // get doc from db
-        try {
-            doc = await model.findById(id);
-
-            if (!doc) {
-                return res.status(401).json({
-                    status: 'error',
-                    msg: `${id} not in collection`
-                });
-            }
-        } catch (err) {
-            return handleQueryError(req, res, err);
-        }
-
-        // update doc fields
-        doc = updateDocumentFields(req.body, doc);
-
-        // validate new fields
-        try {
-            let validateResult = await doc.validate();
-        } catch (err) {
-            return handleValidateError(err, req, res, next);
-        }
-
         // save updated doc
         try {
-            let queryResult = await doc.save();
+            let queryResult = await model.updateOne({ _id: id }, req.body);
 
             res.status(200).json({
                 status: 'ok',
                 msg: 'updated',
-                friendlyMsg: 'Save sucessful',
-                data: [queryResult._id]
+                friendlyMsg: 'Save sucessful'
             });
         } catch (err) {
-            return handleQueryError(req, res, err);
+            return handleQueryError(err, req, res, next);
         }
     }
 }
