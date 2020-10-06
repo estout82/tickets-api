@@ -17,13 +17,13 @@ const categoryRouter = require('./ticketCategory');
 const statusRouter = require('./ticketStatus');
 const formRouter = require('./ticketForm');
 const flowRouter = require('./ticketFlow');
+const counter = require('../helper/counter');
 
 /**
  * constants ----------------------------------------------------------------------
  */
 const NUM_TICKETS_PER_PAGE = 25;
-const DEFAULT_FORM = '';
-const DEFAULT_STATUS = ''; // FIXME: store this in the meta db
+const DEFAULT_STATUS = '5f7b8c09df4e5d6fa04153b9'; // FIXME: store this in the meta db
 
 const router = express.Router();
 
@@ -79,14 +79,47 @@ const readQueryCallback = async (id) => {
 router.get('/', 
     controller.createReadAllHandler(Ticket, readAllQueryCallback));
 
+router.get('/numpages', async (req, res, next) => {
+    // get the doc count from db
+    try {
+        const ticketCount = await Ticket.countDocuments();
+        const pageCount = Math.ceil(ticketCount / NUM_TICKETS_PER_PAGE);
+
+        res.status(200).json({
+            status: 'ok',
+            data: pageCount
+        });
+    } catch (error) {
+        next({
+            status: 'error',
+            msg: 'unable to get count of tickets',
+            friendlyMsg: 'Unable to get ticket count',
+            debug: error
+        });
+    }
+});
+
 router.get('/:id([0-9a-zA-Z]{24})', 
     controller.createReadHandler(Ticket, readQueryCallback));
+
+const readPageQueryCallback = (number, documentsPerPage) => {
+    return Ticket.find({}, null, { skip: documentsPerPage * number })
+    .select('title number category organization user status')
+    .populate([
+        { path: 'user', select: 'firstName lastName email' },
+        { path: 'organization', select: 'name' },
+        { path: 'category', select: 'name' },
+        { path: 'status', select: 'name appearance' }
+    ])
+    .limit(documentsPerPage)
+    .exec();
+}
 
 /**
  * responds with shallow data about a single page of tickets
  */
 router.get('/page/:number([0-9]+)', 
-    controller.createReadPageHandler(Ticket, NUM_TICKETS_PER_PAGE, readAllQueryCallback));
+    controller.createReadPageHandler(Ticket, NUM_TICKETS_PER_PAGE, readPageQueryCallback));
 
 router.post('/create', async (req, res, next) => {
     // ensure body is not empty
@@ -102,7 +135,26 @@ router.post('/create', async (req, res, next) => {
         data.status = DEFAULT_STATUS;
     }
 
-    let doc = new Ticket(req.body);
+    // get the next ticket num
+    const ticketNum = await counter.getNext('Ticket');
+
+    if (ticketNum === null) {
+        // failed to get a ticket number
+        res.status(500).json({
+            status: 'error',
+            msg: 'failed to generate a ticket number',
+            friendlyMsg: 'Failed to generate a ticket number',
+            debug: 'see server log for details'
+        });
+        return;
+    }
+
+    data.number = ticketNum;
+    
+    console.log(data.number);
+
+    // create new doc with data
+    let doc = new Ticket(data);
 
     // validate doc
     try {

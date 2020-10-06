@@ -108,13 +108,13 @@ const createReadHandler = (model, queryCallback = null) => {
 
 const createReadPageHandler = (model, documentsPerPage, queryCallback = null) => {
     return async (req, res, next) => {
-        const page = req.params.page - 1;
+        const number = req.params.number - 1;
 
         // ensure we dont try to access negative pages
-        if (page < 0) {
+        if (number < 0) {
             res.status(404).json({
                 status: 'error',
-                msg: `invalid page ${page + 1}`
+                msg: `invalid page ${number + 1}`
             });
             return;
         }
@@ -123,10 +123,10 @@ const createReadPageHandler = (model, documentsPerPage, queryCallback = null) =>
             let queryResult = null;
 
             if (queryCallback) {
-                queryResult = await queryCallback(model, page, documentsPerPage);
+                queryResult = await queryCallback(number, documentsPerPage);
             } else {
-                queryResult = await model.find(null, null, { skip: documentsPerPage * page })
-                    .limit(documentsPerPage)
+                queryResult = await model.find(null, null, { skip: documentsPerPage * number })
+                    .limit(5)
                     .exec();
             }
 

@@ -3,22 +3,19 @@ const Counter = require('../models/Counter');
 const log = require('./log');
 
 async function getNext(modelName) {
-    let r = null;
-
     try {
-        Counter.findOneAndUpdate({ modelName: modelName }, 
+        let doc = await Counter.findOneAndUpdate(
+            { modelName: modelName }, 
             { $inc: { count: 1 } },
-            { new: true, upsert: true },
-            (error, counter) => {
-                if (error) {
-                    log.error(`error during callback get next count for ${modelName}`, error);
-                }
+            { new: true, upsert: true, useFindAndModify: false });
 
-                r = counter.count;
-            });
+        return doc.count;
     } catch (error) {
         log.error(`error during get next count for ${modelName}`, error);
+        return null;
     }
+}
 
-    return r;
+module.exports = {
+    getNext
 }
