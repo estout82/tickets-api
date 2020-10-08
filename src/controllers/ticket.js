@@ -65,10 +65,12 @@ const readQueryCallback = async (id) => {
     .findById(id)
     .populate('user')
     .populate('organization')
-    .populate('category')
+    .populate({
+        path: 'category',
+        populate: { path: 'form' }
+    })
     .populate('status')
     .populate('flows')
-    .populate('form')
     .populate('comments.user', 'firstName lastName')
     .exec();
 };
@@ -170,6 +172,7 @@ router.post('/create', async (req, res, next) => {
         return res.status(201).json({
             status: 'ok',
             msg: 'created',
+            friendlyMsg: 'Ticket craeted sucessfully',
             data: [ saveResult._id ]
         });
     } catch (err) {

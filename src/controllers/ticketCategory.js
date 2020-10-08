@@ -27,24 +27,19 @@ const router = express.Router();
 /**
  * routes
  */
-const readAllQureyCallback = () => {
+const readQureyCallback = () => {
     return TicketCategory.find()
     .select('name')
-    .exec();
-}
-
-router.get('/', 
-    controller.createReadAllHandler(TicketCategory));
-
-const readSingleQueryCallback = (id) => {
-    return TicketCategory.findById(id)
     .populate('form')
     .populate('flows')
     .exec();
 }
 
+router.get('/', 
+    controller.createReadAllHandler(TicketCategory, readQureyCallback));
+
 router.get('/:id([0-9a-zA-Z]{24})',
-    controller.createReadHandler(TicketCategory, readSingleQueryCallback));
+    controller.createReadHandler(TicketCategory, readQureyCallback));
 
 router.post('/create',
     controller.createCreateHandler(TicketCategory));

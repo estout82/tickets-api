@@ -12,6 +12,11 @@ const fieldSchema = mongoose.Schema({
         type: String
     },
 
+    // short description describing the field
+    description: {
+        type: String
+    },
+
     // string specifing type of form element to present
     element: {
         type: String

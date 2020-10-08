@@ -47,15 +47,6 @@ const todoSchema = mongoose.Schema({
 });
 
 const schema = mongoose.Schema({
-    title: {
-        type: String,
-        required: true,
-        maxlength: 255
-    },
-    description: {
-        type: String,
-        default: null
-    },
     number: {
         type: Number,
         required: true
@@ -106,7 +97,7 @@ const schema = mongoose.Schema({
     // stores custom parameters collected by custom ticket form
     // no need for sub doc _id
     parameters: {
-        type: [{ value: String, label: String, name: String }]
+        type: Object
     }
 });
 
