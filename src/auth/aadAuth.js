@@ -17,7 +17,7 @@ passport.deserializeUser(function(user, done) {
 
 passport.use(new AzureAdOAuth2Strategy({
     clientID: '66aca68b-31c6-4017-85b0-74c243e4ae90',
-    clientSecret: 'EIDh26.L12Ay-uk4fa_.X_sNk-uH8w3z3m',
+    clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
     callbackURL: 'http://localhost:9000/auth/azureadoauth2/callback',
     tenant: 'ericstoutenburg7gmail.onmicrosoft.com'
   },
